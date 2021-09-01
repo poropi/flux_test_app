@@ -41,10 +41,10 @@ typedef void OnData<T>(T event);
 /// when a consumer needs to check state changes immediately after invoking an
 /// action.
 ///
-class Action<T> implements Function {
+class FluxAction<T> implements Function {
   List<OnData<T>> _listeners = <OnData<T>>[];
 
-  /// Dispatch this [Action] to all listeners. If a payload is supplied, it will
+  /// Dispatch this [FluxAction] to all listeners. If a payload is supplied, it will
   /// be passed to each listener's callback, otherwise null will be passed.
   Future<List<dynamic>> call({required T payload}) {
     // Invoke all listeners in a microtask to enable waiting on futures. The
@@ -65,12 +65,12 @@ class Action<T> implements Function {
     );
   }
 
-  /// Cancel all subscriptions that exist on this [Action] as a result of
+  /// Cancel all subscriptions that exist on this [FluxAction] as a result of
   /// [listen] being called. Useful when tearing down a flux cycle in some
   /// module or unit test.
   void clearListeners() => _listeners.clear();
 
-  /// Supply a callback that will be called any time this [Action] is
+  /// Supply a callback that will be called any time this [FluxAction] is
   /// dispatched. A payload of type [T] will be passed to the callback if
   /// supplied at dispatch time, otherwise null will be passed. Returns an
   /// [ActionSubscription] which provides means to cancel the subscription.
@@ -82,13 +82,13 @@ class Action<T> implements Function {
 
 typedef void _OnCancel();
 
-/// A subscription used to cancel registered listeners to an [Action].
+/// A subscription used to cancel registered listeners to an [FluxAction].
 class ActionSubscription {
   final _OnCancel _onCancel;
 
   ActionSubscription(this._onCancel);
 
-  /// Cancel this subscription to an [Action]
+  /// Cancel this subscription to an [FluxAction]
   void cancel() {
     if (_onCancel != null) {
       _onCancel();

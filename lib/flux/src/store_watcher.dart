@@ -19,9 +19,9 @@ import 'package:flutter/foundation.dart';
 import 'store.dart';
 
 /// Signature for a function the lets the caller listen to a store.
-typedef Store ListenToStore(StoreToken token, {ValueChanged<Store>? onStoreChanged});
+typedef FluxStore ListenToStore(StoreToken token, {ValueChanged<FluxStore>? onStoreChanged});
 
-/// A widget that rebuilds when the [Store]s it is listening to change.
+/// A widget that rebuilds when the [FluxStore]s it is listening to change.
 abstract class StoreWatcher extends StatefulWidget {
   /// Creates a widget that watches stores.
   StoreWatcher({ required Key key }) : super(key: key);
@@ -29,7 +29,7 @@ abstract class StoreWatcher extends StatefulWidget {
   /// Override this function to build widgets that depend on the current value
   /// of the store.
   @protected
-  Widget build(BuildContext context, Map<StoreToken, Store> stores);
+  Widget build(BuildContext context, Map<StoreToken, FluxStore> stores);
 
   /// Override this function to configure which stores to listen to.
   ///
@@ -49,7 +49,7 @@ abstract class StoreWatcher extends StatefulWidget {
 /// State for a [StoreWatcher] widget.
 class StoreWatcherState extends State<StoreWatcher> with StoreWatcherMixin<StoreWatcher> {
 
-  final Map<StoreToken, Store> _storeTokens = <StoreToken, Store>{};
+  final Map<StoreToken, FluxStore> _storeTokens = <StoreToken, FluxStore>{};
 
   @override
   void initState() {
@@ -64,8 +64,8 @@ class StoreWatcherState extends State<StoreWatcher> with StoreWatcherMixin<Store
   /// default function, which rebuilds everything, and let the framework figure
   /// out the delta of what changed.
   @override
-  Store listenToStore(StoreToken token, {ValueChanged<Store>? onStoreChanged}) {
-    final Store store = super.listenToStore(token, onStoreChanged: onStoreChanged);
+  FluxStore listenToStore(StoreToken token, {ValueChanged<FluxStore>? onStoreChanged}) {
+    final FluxStore store = super.listenToStore(token, onStoreChanged: onStoreChanged);
     _storeTokens[token] = store;
     return store;
   }
@@ -80,22 +80,22 @@ class StoreWatcherState extends State<StoreWatcher> with StoreWatcherMixin<Store
 ///
 /// Used by [StoreWatcher] to track which stores the widget is listening to.
 mixin StoreWatcherMixin<T extends StatefulWidget> on State<T>{
-  final Map<Store, StreamSubscription<Store>> _streamSubscriptions = <Store, StreamSubscription<Store>>{};
+  final Map<FluxStore, StreamSubscription<FluxStore>> _streamSubscriptions = <FluxStore, StreamSubscription<FluxStore>>{};
 
   /// Start receiving notifications from the given store, optionally routed
   /// to the given function.
   ///
   /// By default, [onStoreChanged] will be called when the store changes.
   @protected
-  Store listenToStore(StoreToken token, {ValueChanged<Store>? onStoreChanged}) {
-    final Store store = token._value;
+  FluxStore listenToStore(StoreToken token, {ValueChanged<FluxStore>? onStoreChanged}) {
+    final FluxStore store = token._value;
     _streamSubscriptions[store] = store.listen(onStoreChanged ?? _handleStoreChanged);
     return store;
   }
 
   /// Stop receiving notifications from the given store.
   @protected
-  void unlistenFromStore(Store store) {
+  void unlistenFromStore(FluxStore store) {
     _streamSubscriptions[store]?.cancel();
     _streamSubscriptions.remove(store);
   }
@@ -103,15 +103,15 @@ mixin StoreWatcherMixin<T extends StatefulWidget> on State<T>{
   /// Cancel all store subscriptions.
   @override
   void dispose() {
-    final Iterable<StreamSubscription<Store>> subscriptions =
+    final Iterable<StreamSubscription<FluxStore>> subscriptions =
       _streamSubscriptions.values;
-    for (final StreamSubscription<Store> subscription in subscriptions)
+    for (final StreamSubscription<FluxStore> subscription in subscriptions)
       subscription.cancel();
     _streamSubscriptions.clear();
     super.dispose();
   }
 
-  void _handleStoreChanged(Store store) {
+  void _handleStoreChanged(FluxStore store) {
     // TODO(abarth): We cancel our subscriptions in [dispose], which means we
     // shouldn't receive this callback when we're not mounted. If that's the
     // case, we should change this check into an assert that we are mounted.
@@ -135,7 +135,7 @@ class StoreToken {
   /// Creates a store token for the given store.
   StoreToken(this._value);
 
-  final Store _value;
+  final FluxStore _value;
 
   @override
   bool operator ==(dynamic other) {

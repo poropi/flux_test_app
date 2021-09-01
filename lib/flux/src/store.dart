@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import 'dart:async';
+import 'action.dart';
 
-import 'package:flux_test_app/flux//src/action.dart';
 
 /// A `Store` is a repository and manager of app state. This class should be
 /// extended to fit the needs of your application and its data. The number and
@@ -33,34 +33,34 @@ import 'package:flux_test_app/flux//src/action.dart';
 /// In a typical application using `w_flux`, a [FluxComponent] listens to
 /// `Store`s, triggering re-rendering of the UI elements based on the updated
 /// `Store` data.
-class Store {
-  /// Construct a new [Store] instance.
-  Store() {
-    _streamController = new StreamController<Store>();
+class FluxStore {
+  /// Construct a new [FluxStore] instance.
+  FluxStore() {
+    _streamController = new StreamController<FluxStore>();
     _stream = _streamController.stream.asBroadcastStream();
   }
 
-  /// Construct a new [Store] instance with a transformer.
+  /// Construct a new [FluxStore] instance with a transformer.
   ///
   /// The standard behavior of the "trigger" stream will be modified. The
   /// underlying stream will be transformed using [transformer].
   ///
   /// As an example, [transformer] could be used to throttle the number of
-  /// triggers this [Store] emits for state that may update extremely frequently
+  /// triggers this [FluxStore] emits for state that may update extremely frequently
   /// (like scroll position).
-  Store.withTransformer(StreamTransformer<Store, dynamic> transformer) {
-    _streamController = new StreamController<Store>();
+  FluxStore.withTransformer(StreamTransformer<FluxStore, dynamic> transformer) {
+    _streamController = new StreamController<FluxStore>();
 
     // apply a transform to the stream if supplied
     _stream =
-        _streamController.stream.transform<dynamic>(transformer).asBroadcastStream() as Stream<Store>;
+        _streamController.stream.transform<dynamic>(transformer).asBroadcastStream() as Stream<FluxStore>;
   }
 
   /// Stream controller for [_stream]. Used by [trigger].
-  late StreamController<Store> _streamController;
+  late StreamController<FluxStore> _streamController;
 
   /// Broadcast stream of "data updated" events. Listened to in [listen].
-  late Stream<Store> _stream;
+  late Stream<FluxStore> _stream;
 
   void dispose() {
     _streamController.close();
@@ -79,8 +79,8 @@ class Store {
   /// A convenience method for listening to an [action] and triggering
   /// automatically. The callback doesn't call return, so the return
   /// type of onAction is null.
-  void triggerOnAction<T>(Action<T> action,
-      {required dynamic onAction(T payload)}) {
+  void triggerOnAction<T>(FluxAction<T> action,
+      {dynamic onAction(T payload)?}) {
     if (onAction != null) {
       action.listen((T payload) async {
         await onAction(payload);
@@ -101,8 +101,7 @@ class Store {
   /// called until that future has resolved and the function returns either
   /// void (null) or true.
   void triggerOnConditionalAction<T>(
-      Action<T> action, FutureOr<bool> onAction(T payload)) {
-    assert(action != null);
+      FluxAction<T> action, FutureOr<bool> onAction(T payload)) {
     action.listen((dynamic payload) async {
       // Action functions must return bool, or a Future<bool>.
       dynamic result = onAction(payload);
@@ -122,7 +121,7 @@ class Store {
   ///
   /// Each time this `Store` triggers (by calling [trigger]), indicating that
   /// data has been mutated, [onData] will be called.
-  StreamSubscription<Store> listen(void onData(Store event),
+  StreamSubscription<FluxStore> listen(void onData(FluxStore event),
       {Function? onError, void onDone()?, bool? cancelOnError}) {
     return _stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
